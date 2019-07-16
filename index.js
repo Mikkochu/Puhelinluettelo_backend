@@ -1,8 +1,20 @@
 const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
+const morgan = require("morgan");
 
 app.use(bodyParser.json());
+
+morgan.token("data", request => {
+  return JSON.stringify(request.body); //Muuttaa json-muotoon
+});
+
+//Morganin käyttöönotto
+// Using format string of predefined tokens
+app.use(
+  morgan(":method :url :status :res[content-length] - :response-time ms :data")
+  //post, url, status, pituus, viive ms, dataObjekti
+);
 
 let persons = [
   {
