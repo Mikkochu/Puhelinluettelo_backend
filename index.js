@@ -35,10 +35,22 @@ app.get("/api/persons", (request, response) => {
 // info sivu
 
 app.get("/api/info", (request, response) => {
-  let date = new Date();
-  let personListSize = persons.length;
+  const date = new Date();
+  const personListSize = persons.length;
   response.send(`<p> Phonebook has info for ${personListSize} people <p/>
    ${date}`);
+});
+
+//Yksittäisen resurssin GET
+
+app.get("/api/persons/:id", (request, response) => {
+  const id = Number(request.params.id); //Muutetaan id string -> integer
+  const personToGet = persons.find(person => person.id === id); //etsii henkilön listasta, jolla vastaava id
+  if (personToGet) {
+    response.json(personToGet);
+  } else {
+    response.status(404).end(); //Jos henkilöä ei löydy vastaan statuskoodilla 404
+  }
 });
 
 const PORT = 3001;
