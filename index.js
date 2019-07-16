@@ -72,7 +72,6 @@ const generateNewId = () => {
 
 app.post("/api/persons", (request, response) => {
   const body = request.body;
-  console.log("body", request);
 
   if (!body.name) {
     return response.status(400).json({
@@ -82,6 +81,14 @@ app.post("/api/persons", (request, response) => {
   if (!body.number) {
     return response.status(400).json({
       error: "Person number is missing"
+    });
+  }
+
+  const allNames = persons.map(person => person.name); // Tallentaa kaikki nimet taulukkoon
+  //Tarkistaa onko nimi serverillä
+  if (allNames.includes(body.name)) {
+    return response.status(409).json({
+      error: "Person name must be unique"
     });
   }
 
