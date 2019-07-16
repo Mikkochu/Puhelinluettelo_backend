@@ -1,5 +1,8 @@
 const express = require("express");
 const app = express();
+const bodyParser = require("body-parser");
+
+app.use(bodyParser.json());
 
 let persons = [
   {
@@ -60,6 +63,36 @@ app.delete("/api/persons/:id", (request, response) => {
   persons = persons.filter(person => person.id !== id); //Filtteröidään vaan henkilöt joiden id ei vastaa poistettavaa id:ta
 
   response.status(204).end();
+});
+
+const generateNewId = () => {
+  const newID = persons.length > 0 ? Math.floor(Math.random() * 1001) : 0; //Luo id:n 0-1000 joukosta
+  return newID;
+};
+
+app.post("/api/persons", (request, response) => {
+  const body = request.body;
+  console.log("body", request);
+
+  if (!body.name) {
+    return response.status(400).json({
+      error: "Person name is missing"
+    });
+  }
+  if (!body.number) {
+    return response.status(400).json({
+      error: "Person number is missing"
+    });
+  }
+
+  const person = {
+    content: body.name,
+    number: body.number,
+    id: generateNewId()
+  };
+
+  persons = persons.concat(person); //Päivittää persons listan
+  response.json(person); //palauttaa juuri luodun henkilön
 });
 
 const PORT = 3001;
