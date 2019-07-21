@@ -2,7 +2,9 @@ const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
 const morgan = require("morgan");
+const cors = require("cors");
 
+app.use(cors());
 app.use(bodyParser.json());
 
 morgan.token("data", request => {
@@ -105,7 +107,7 @@ app.post("/api/persons", (request, response) => {
   }
 
   const person = {
-    content: body.name,
+    name: body.name,
     number: body.number,
     id: generateNewId()
   };
@@ -114,7 +116,7 @@ app.post("/api/persons", (request, response) => {
   response.json(person); //palauttaa juuri luodun henkilön
 });
 
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
