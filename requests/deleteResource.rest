@@ -1,1 +1,1 @@
-DELETE http://localhost:3001/api/persons/764
+DELETE https://pure-taiga-12741.herokuapp.com/api/persons/64
