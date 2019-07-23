@@ -62,17 +62,20 @@ app.get("/api/persons", (request, response) => {
     .then(allPersons => {
       response.json(allPersons.map(person => person.toJSON()));
     })
-    .catch(errorMsg => {
-      console.log("Error GET ALL: ", errorMsg);
-      response.status(404).end();
-    });
+    .catch(error => next(error));
 });
 
 //Yksittäisen resurssin GET MONGO
 app.get("/api/persons/:id", (request, response) => {
-  Person.findById(request.params.id).then(person => {
-    response.json(person.toJSON());
-  });
+  Person.findById(request.params.id)
+    .then(person => {
+      if (person) {
+        response.json(person.toJSON());
+      } else {
+        response.status(404).end();
+      }
+    })
+    .catch(error => next(error));
 });
 
 // Resurssin poisto
@@ -106,12 +109,37 @@ app.post("/api/persons", (request, response) => {
     .then(savedPerson => {
       response.json(savedPerson.toJSON());
     })
-    .catch(errorMsg => {
-      console.log("Error GET ALL: ", errorMsg);
-      response.status(404).end();
-    });
+    .catch(error => next(error));
 });
 
+// MIDDLEWARE
+
+const requestLogger = (request, response, next) => {
+  console.log("Method:", request.method);
+  console.log("Path:  ", request.path);
+  console.log("Body:  ", request.body);
+  console.log("---");
+  next();
+};
+app.use(requestLogger);
+
+// olemattomien osoitteiden käsittely
+const unknownEndpoint = (request, response) => {
+  response.status(404).send({ error: "unknown endpoint" });
+};
+app.use(unknownEndpoint);
+
+//Virheidenkäsittely
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message);
+  if (error.name === "CastError" && error.kind == "ObjectId") {
+    return response.status(400).send({ error: "malformatted id" });
+  }
+  next(error);
+};
+app.use(errorHandler);
+
+//PORT
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
