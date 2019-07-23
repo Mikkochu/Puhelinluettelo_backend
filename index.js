@@ -6,9 +6,9 @@ const Person = require("./models/person");
 const morgan = require("morgan");
 const cors = require("cors");
 
-app.use(cors());
-app.use(bodyParser.json());
 app.use(express.static("build"));
+app.use(bodyParser.json());
+app.use(cors());
 
 //MORGAN
 morgan.token("data", request => {
@@ -75,12 +75,13 @@ app.get("/api/persons/:id", (request, response) => {
   });
 });
 
-// Resurssin poisto EI PÄIVITÄ MONGODB
-app.delete("/api/persons/:id", (request, response) => {
-  const id = Number(request.params.id);
-  persons = persons.filter(person => person.id !== id); //Filtteröidään vaan henkilöt joiden id ei vastaa poistettavaa id:ta
-
-  response.status(204).end();
+// Resurssin poisto
+app.delete("/api/persons/:id", (request, response, next) => {
+  Person.findByIdAndDelete(request.params.id)
+    .then(result => {
+      response.status(204).end();
+    })
+    .catch(error => next(error));
 });
 
 //POST
