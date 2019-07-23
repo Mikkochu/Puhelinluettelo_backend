@@ -32,7 +32,7 @@ app.get("/api/info", (request, response) => {
 });
 
 //ETUSIVU
-app.get("/api/", (request, response) => {
+app.get("/api/", (request, response, next) => {
   response.send("<h1>Mainpage</h1>");
 });
 
@@ -68,7 +68,7 @@ app.delete("/api/persons/:id", (request, response, next) => {
 });
 
 //POST
-app.post("/api/persons", (request, response) => {
+app.post("/api/persons", (request, response, next) => {
   const body = request.body;
 
   if (body.name === undefined) {
@@ -86,8 +86,9 @@ app.post("/api/persons", (request, response) => {
 
   person
     .save()
-    .then(savedPerson => {
-      response.json(savedPerson.toJSON());
+    .then(savedPerson => savedPerson.toJSON())
+    .then(savedAndFormattedPerson => {
+      response.json(savedAndFormattedPerson);
     })
     .catch(error => next(error));
 });
@@ -127,9 +128,15 @@ app.use(unknownEndpoint);
 
 //Virheidenkäsittely
 const errorHandler = (error, request, response, next) => {
-  console.error(error.message);
+  console.error("VIRHE", error);
+  console.error("VIRHEVIESTI", error.message);
+
   if (error.name === "CastError" && error.kind == "ObjectId") {
+    console.log("CastError");
     return response.status(400).send({ error: "malformatted id" });
+  } else if (error.name === "ValidationError") {
+    console.log("ValidationError");
+    return response.status(409).json({ error: error.message });
   }
   next(error);
 };

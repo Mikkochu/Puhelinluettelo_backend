@@ -1,7 +1,7 @@
-POST https://pure-taiga-12741.herokuapp.com/api/persons
+POST http://localhost:3001/api/persons/
 Content-Type: application/json
 
 {
-    "name": "Arto Hellas",
-    "number": "111-22222"
+    "name": "Anna",
+    "number": "777"
 }
