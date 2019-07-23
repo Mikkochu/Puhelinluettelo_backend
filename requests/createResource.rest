@@ -1,4 +1,4 @@
-POST https://pure-taiga-12741.herokuapp.com/api/persons
+POST POST http://localhost:3001/api/persons
 Content-Type: application/json
 
 {

@@ -1,6 +1,8 @@
+require("dotenv").config();
 const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
+const Person = require("./models/person");
 const morgan = require("morgan");
 const cors = require("cors");
 
@@ -8,12 +10,11 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static("build"));
 
+//MORGAN
 morgan.token("data", request => {
   return JSON.stringify(request.body); //Muuttaa json-muotoon
 });
 
-//Morganin käyttöönotto
-// Using format string of predefined tokens
 app.use(
   morgan(":method :url :status :res[content-length] - :response-time ms :data")
   //post, url, status, pituus, viive ms, dataObjekti
@@ -42,16 +43,7 @@ let persons = [
   }
 ];
 
-app.get("/api/", (request, response) => {
-  response.send("<h1>Mainpage</h1>");
-});
-
-app.get("/api/persons", (request, response) => {
-  response.json(persons);
-});
-
 // info sivu
-
 app.get("/api/info", (request, response) => {
   const date = new Date();
   const personListSize = persons.length;
@@ -59,20 +51,31 @@ app.get("/api/info", (request, response) => {
    ${date}`);
 });
 
-//Yksittäisen resurssin GET
+//ETUSIVU
+app.get("/api/", (request, response) => {
+  response.send("<h1>Mainpage</h1>");
+});
 
+//GET ALL, MONGO
+app.get("/api/persons", (request, response) => {
+  Person.find({})
+    .then(allPersons => {
+      response.json(allPersons.map(person => person.toJSON()));
+    })
+    .catch(errorMsg => {
+      console.log("Error GET ALL: ", errorMsg);
+      response.status(404).end();
+    });
+});
+
+//Yksittäisen resurssin GET MONGO
 app.get("/api/persons/:id", (request, response) => {
-  const id = Number(request.params.id); //Muutetaan id string -> integer
-  const personToGet = persons.find(person => person.id === id); //etsii henkilön listasta, jolla vastaava id
-  if (personToGet) {
-    response.json(personToGet);
-  } else {
-    response.status(404).end(); //Jos henkilöä ei löydy vastaan statuskoodilla 404
-  }
+  Person.findById(request.params.id).then(person => {
+    response.json(person.toJSON());
+  });
 });
 
 // Resurssin poisto
-
 app.delete("/api/persons/:id", (request, response) => {
   const id = Number(request.params.id);
   persons = persons.filter(person => person.id !== id); //Filtteröidään vaan henkilöt joiden id ei vastaa poistettavaa id:ta
@@ -80,44 +83,36 @@ app.delete("/api/persons/:id", (request, response) => {
   response.status(204).end();
 });
 
+/*
 const generateNewId = () => {
   const newID = persons.length > 0 ? Math.floor(Math.random() * 1001) : 0; //Luo id:n 0-1000 joukosta
   return newID;
-};
+}; */
 
+//POST
 app.post("/api/persons", (request, response) => {
   const body = request.body;
 
-  if (!body.name) {
-    return response.status(400).json({
-      error: "Person name is missing"
-    });
-  }
-  if (!body.number) {
-    return response.status(400).json({
-      error: "Person number is missing"
-    });
+  if (body.name === undefined) {
+    return response.status(400).json({ error: "name missing" });
   }
 
-  const allNames = persons.map(person => person.name); // Tallentaa kaikki nimet taulukkoon
-  //Tarkistaa onko nimi serverillä
-  if (allNames.includes(body.name)) {
-    return response.status(409).json({
-      error: "Person name must be unique"
-    });
+  if (body.number === undefined) {
+    return response.status(400).json({ error: "number missing" });
   }
 
-  const person = {
+  const person = new Person({
     name: body.name,
-    number: body.number,
-    id: generateNewId()
-  };
+    number: body.number
+    //id: generateNewId()
+  });
 
-  persons = persons.concat(person); //Päivittää persons listan
-  response.json(person); //palauttaa juuri luodun henkilön
+  person.save().then(savedPerson => {
+    response.json(savedPerson.toJSON());
+  });
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
