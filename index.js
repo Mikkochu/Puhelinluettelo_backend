@@ -75,19 +75,13 @@ app.get("/api/persons/:id", (request, response) => {
   });
 });
 
-// Resurssin poisto
+// Resurssin poisto EI PÄIVITÄ MONGODB
 app.delete("/api/persons/:id", (request, response) => {
   const id = Number(request.params.id);
   persons = persons.filter(person => person.id !== id); //Filtteröidään vaan henkilöt joiden id ei vastaa poistettavaa id:ta
 
   response.status(204).end();
 });
-
-/*
-const generateNewId = () => {
-  const newID = persons.length > 0 ? Math.floor(Math.random() * 1001) : 0; //Luo id:n 0-1000 joukosta
-  return newID;
-}; */
 
 //POST
 app.post("/api/persons", (request, response) => {
@@ -104,12 +98,17 @@ app.post("/api/persons", (request, response) => {
   const person = new Person({
     name: body.name,
     number: body.number
-    //id: generateNewId()
   });
 
-  person.save().then(savedPerson => {
-    response.json(savedPerson.toJSON());
-  });
+  person
+    .save()
+    .then(savedPerson => {
+      response.json(savedPerson.toJSON());
+    })
+    .catch(errorMsg => {
+      console.log("Error GET ALL: ", errorMsg);
+      response.status(404).end();
+    });
 });
 
 const PORT = process.env.PORT;
