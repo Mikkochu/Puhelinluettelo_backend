@@ -20,35 +20,15 @@ app.use(
   //post, url, status, pituus, viive ms, dataObjekti
 );
 
-let persons = [
-  {
-    name: "Arto Hellas",
-    number: "040-123456",
-    id: 1
-  },
-  {
-    name: "Ada Lovelace",
-    number: "39-44-5323523",
-    id: 2
-  },
-  {
-    name: "Dan Abramov",
-    number: "12-43-234345",
-    id: 3
-  },
-  {
-    name: "Mary Poppendieck",
-    number: "39-23-6423122",
-    id: 4
-  }
-];
-
-// info sivu
+// uusi infosivu
 app.get("/api/info", (request, response) => {
   const date = new Date();
-  const personListSize = persons.length;
-  response.send(`<p> Phonebook has info for ${personListSize} people <p/>
-   ${date}`);
+  Person.find({})
+    .then(allPersons => {
+      response.send(`<p> Phonebook has info for ${allPersons.length} people <p/>
+      ${date}`);
+    })
+    .catch(error => next(error));
 });
 
 //ETUSIVU
@@ -112,7 +92,7 @@ app.post("/api/persons", (request, response) => {
     .catch(error => next(error));
 });
 
-//Päivitys
+//PUT
 app.put("/api/persons/:id", (request, response, next) => {
   const body = request.body;
 
